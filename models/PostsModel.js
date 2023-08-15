@@ -31,7 +31,6 @@ const postSchema = new mongoose.Schema({
 
 postSchema.pre('save', function (next) {
     this.created_at = Date.now();
-    console.log("Posts Save: " + this.created_at);
     next();
 })
 

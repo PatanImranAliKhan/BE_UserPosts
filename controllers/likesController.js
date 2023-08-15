@@ -1,6 +1,6 @@
-const LikesModel = require('../models/LikesModel')
-const PostModel = require('../models/PostsModel');
+const LikesModel = require('../models/LikesModel');
 const authController = require('./AuthController');
+const pathController = require('./postsController');
 
 /**
  * Verifyig previous like status for provided post with User details
@@ -16,33 +16,19 @@ const verifyLikedStatus = async (userId, postId) => {
     }
 }
 
-/**
- * Verifying whether provided postId was valid or not
- * @param postId 
- * @returns 
- */
-const verifyPostWithId = async (postId) => {
-    try {
-        return await PostModel.findById(postId);
-    } catch (e) {
-        return false;
-    }
-}
-
-
 exports.likePost = async (req, res, next) => {
     try {
         const postId = req.params.id;
         const userId = await authController.verifyToken(req);
         if (!userId) {
-            return res.status(403).json({ message: "UnAuthorized" });
+            return res.status(401).json({ Error: "UnAuthorized" });
         }
-        if (!(await verifyPostWithId(postId))) {
-            return res.status(403).json({ message: "Invalid PostId, provide valid PostID" });
+        if (!(await pathController.verifyPostWithId(postId))) {
+            return res.status(400).json({ Error: "Invalid PostId, provide valid PostID" });
         }
         const likedResult = await verifyLikedStatus(userId, postId);
         if (likedResult && likedResult.active === true) {
-            return res.status(201).json({ message: "Already liked the post" });
+            return res.status(200).json({ Message: "Already liked the post" });
         }
         let finalLikedResult = null;
         if (likedResult) {
@@ -58,9 +44,9 @@ exports.likePost = async (req, res, next) => {
         }
         finalLikedResult = await finalLikedResult.populate("postId");
         await updatePostsLikedData(finalLikedResult, 1);
-        res.status(201).json({ message: "Liked the Post with Id : " + postId });
+        res.status(200).json({ Message: "Liked the Post with Id : " + postId });
     } catch (e) {
-        res.status(403).json({ message: "caught something Error while liking the Post " + e });
+        res.status(500).json({ Error: "caught something Error while liking the Post " + e });
     }
 }
 
@@ -82,14 +68,14 @@ exports.unLikePost = async (req, res, next) => {
         const postId = req.params.id;
         const userId = await authController.verifyToken(req);
         if (!userId) {
-            return res.status(403).json({ message: "UnAuthorized" });
+            return res.status(401).json({ Error: "UnAuthorized" });
         }
-        if (!(await verifyPostWithId(postId))) {
-            return res.status(403).json({ message: "Invalid PostId, provide valid PostID" });
+        if (!(await pathController.verifyPostWithId(postId))) {
+            return res.status(400).json({ Error: "Invalid PostId, provide valid PostID" });
         }
         const likedResult = await verifyLikedStatus(userId, postId);
         if (!likedResult || likedResult.active === false) {
-            return res.status(201).json({ message: "You have not liked the post to unlike" });
+            return res.status(200).json({ Message: "You have not liked the post to unlike" });
         }
         let finalLikedResult = null;
         likedResult.active = false;
@@ -97,8 +83,8 @@ exports.unLikePost = async (req, res, next) => {
 
         finalLikedResult = await finalLikedResult.populate("postId");
         await updatePostsLikedData(finalLikedResult, -1);
-        res.status(201).json({ message: "UnLiked the Post with Id : " + postId });
+        res.status(200).json({ Message: "UnLiked the Post with Id : " + postId });
     } catch (e) {
-        res.status(403).json({ message: "caught something Error while liking the Post " + e });
+        res.status(500).json({ Error: "caught something Error while liking the Post " + e });
     }
 }

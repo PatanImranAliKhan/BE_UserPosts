@@ -21,7 +21,6 @@ const likesSchema = new mongoose.Schema({
 
 likesSchema.pre('save', function (next) {
     this.status_changed_at = Date.now();
-    console.log("like status Save: " + this.created_at);
     next();
 })
 
