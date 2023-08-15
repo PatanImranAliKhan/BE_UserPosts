@@ -9,7 +9,7 @@ const likesSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'User'
     },
-    user_liked: {
+    active: {
         type: Boolean,
         default: true
     },

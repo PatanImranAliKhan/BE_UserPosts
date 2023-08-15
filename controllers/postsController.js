@@ -7,7 +7,7 @@ exports.addPost = async (req, res, next) => {
         const userId = await authController.verifyToken(req);
         console.log("userId  " + userId)
         if (!userId) {
-            res.status(403).json({ message: "UnAuthorized" })
+            return res.status(403).json({ message: "UnAuthorized" })
         }
         req.body.userId = userId;
         const newpost = await PostModel.create(req.body);

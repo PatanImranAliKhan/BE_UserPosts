@@ -7,6 +7,7 @@ const postController = require('../controllers/postsController');
 
 const followingController = require('../controllers/followingController')
 
+const LikesController = require('../controllers/likesController')
 
 router.post('/authenticate', authController.authenticate);
 router.post('/signup', authController.singnup);
@@ -19,5 +20,8 @@ router.get('/posts/:id', postController.getPost);
 
 router.post('/follow/:id', followingController.followUser);
 router.post('/unfollow/:id', followingController.unfollowUser);
+
+router.post('/like/:id', LikesController.likePost);
+router.post('/unlike/:id', LikesController.unLikePost);
 
 module.exports = router;

@@ -3,11 +3,13 @@ const mongoose = require('mongoose')
 const commentSchema = new mongoose.Schema({
     postId: {
         type: mongoose.Schema.ObjectId,
-        ref: 'Post'
+        ref: 'Post',
+        select: false
     },
     userId: {
         type: mongoose.Schema.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        select: false
     },
     comment: {
         type: String,
@@ -15,7 +17,8 @@ const commentSchema = new mongoose.Schema({
     },
     created_at: {
         type: Date,
-        default: Date.now()
+        default: Date.now(),
+        select: false
     },
     active: {
         type: Boolean,

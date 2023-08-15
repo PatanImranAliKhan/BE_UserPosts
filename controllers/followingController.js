@@ -32,30 +32,43 @@ exports.followUser = async (req, res, next) => {
         if (!id || !(await verifyFollowingUser(id))) {
             return res.status(400).json({ message: "ID was incorrect, provide proper UserId" })
         }
+        let followingDetails = null;
         if (followerData && followerData.active == true) {
             return res.status(200).json({ message: "You are already following the user" });
-        } else if (followerData) {
+        }
+        if (followerData) {
             followerData.active = true;
-            await followerData.save();
-            return res.status(200).json({ message: "Following Detail Saved" })
+            followingDetails = await followerData.save();
+            await updateUserDetails(followingDetails, 1)
+        } else {
+            const obj = {
+                userId: userId,
+                followerId: id
+            }
+            followingDetails = await FollowingModel.create(obj);
+            await updateUserDetails(followingDetails, 1)
         }
-        const obj = {
-            userId: userId,
-            followerId: id
-        }
-        let followingDetails = await FollowingModel.create(obj);
-        followingDetails = await followingDetails.populate('userId followerId')
-        const userDetails = followingDetails.userId;
-        userDetails.following = userDetails.following + 1;
-        userDetails.save();
-        const followerIdDetails = followingDetails.followerId;
-        followerIdDetails.followers = followerIdDetails.followers + 1;
-        followerIdDetails.save();
-        console.log("Following Details saved " + followingDetails);
         return res.status(201).json({ message: "Following Detail Saved" });
     } catch (e) {
-        return res.status(400).json({ message: "Something Error caught on Following user, please try after some time" })
+        return res.status(400).json({ message: "Something Error caught on Following user, please try after some time "+e })
     }
+}
+
+/**
+ * Update user details by incrementing and decrementing the followers data.
+ * Increment the followers only when user calls follow API
+ * Decrement the followers data when user calls the unfollow API
+ * @param followingDetails 
+ * @param value
+ */
+const updateUserDetails = async (followingDetails, value) => {
+    followingDetails = await followingDetails.populate('userId followerId')
+    const userDetails = followingDetails.userId;
+    userDetails.following = userDetails.following + value;
+    await userDetails.save();
+    const followerIdDetails = followingDetails.followerId;
+    followerIdDetails.followers = followerIdDetails.followers + value;
+    await followerIdDetails.save();
 }
 
 exports.unfollowUser = async (req, res, next) => {
@@ -69,19 +82,13 @@ exports.unfollowUser = async (req, res, next) => {
             return res.status(400).json({ message: "Id was not provided" })
         }
         const followerData = await checkFollowing(userId, id);
-        if (!followerData) {
+        if (!followerData || followerData.active === false) {
             return res.status(200).json({ message: "You are not following the User to unfollow" });
         }
         followerData.active = false;
         let followingDetails = await followerData.save()
 
-        followingDetails = await followingDetails.populate('userId followerId')
-        const userDetails = followingDetails.userId;
-        userDetails.following = userDetails.following - 1;
-        userDetails.save();
-        const followerIdDetails = followingDetails.followerId;
-        followerIdDetails.followers = followerIdDetails.followers - 1;
-        followerIdDetails.save();
+        await updateUserDetails(followingDetails, -1);
 
         return res.status(200).json({ message: "unfollowed Successfully" });
     } catch (e) {
