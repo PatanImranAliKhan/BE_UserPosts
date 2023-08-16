@@ -57,7 +57,7 @@ exports.all_posts = async (req, res, next) => {
         if (!userId) {
             return res.status(401).json({ Error: "UnAuthorized" })
         }
-        const allPosts = await PostModel.find({}).select("-userId -__v")
+        const allPosts = await PostModel.find({userId: userId}).select("-userId -__v")
         res.status(200).send(allPosts)
     } catch (e) {
         return res.status(500).json({ Error: "Something Error while retrieving all post " + e })
